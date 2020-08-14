@@ -24,6 +24,14 @@ def __haversine(lon1, lat1, lon2, lat2):
     r = 6371 # Radius of earth in kilometers. Use 3956 for miles
     return c * r * 1000
 
+
+def create_h3_geometry(df):
+    gdf = gpd.GeoDataFrame(df)
+    gdf['geometry'] = df['cell_id'].apply(lambda x: Polygon(h3.h3_to_geo_boundary(x)))
+    gdf.crs = 'EPSG:4326'
+    return gdf
+
+
 def create_h3_geom_cells(extent, resolutions, table, export_type, db_engine):
     """Create geometry for h3 cells in given extent for given resolutions levels
 

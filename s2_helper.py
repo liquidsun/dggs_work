@@ -3,8 +3,6 @@ import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Polygon, Point, box
 from shapely.ops import transform
-from geoalchemy2 import WKTElement, Geometry
-import time
 from pyproj import Transformer
 import rasterio
 from math import radians, sin, cos, asin, sqrt
@@ -27,7 +25,7 @@ def __haversine(lon1, lat1, lon2, lat2):
     return c * r * 1000
 
 
-def create_s2_geometry(cell_id):
+def s2_geometry_from_cellid(cell_id):
     new_cell = s2.S2Cell(s2.S2CellId(cell_id))
     vertices = []
     for i in range(0, 4):
@@ -36,6 +34,12 @@ def create_s2_geometry(cell_id):
                          vertex.lat().degrees()))
     geom = Polygon(vertices)
     return geom
+
+def create_s2_geometry(df):
+    gdf = gpd.GeoDataFrame(df)
+    gdf['geometry'] = gdf['cell_id'].apply(lambda x: s2_geometry_from_cellid(x))
+    gdf.crs = 'EPSG:4326'
+    return gdf
 
 
 def create_s2_geom_cells(extent, resolutions):
