@@ -97,7 +97,7 @@ def create_h3_geom_cells_global(resolutions, table, export_type, db_engine=''):
                 set_hex.extend(list(h3.h3_to_children(i, res)))
         if export_type == 'postgres':
             df = pd.GeoDataFrame({"cell_id": set_hex})
-            gdf['geometry'] = gdf["hex_id"].apply(lambda x:(Polygon(h3.h3_to_geo_boundary(x)).wkb))
+            gdf['geometry'] = gdf["cell_id"].apply(lambda x:(Polygon(h3.h3_to_geo_boundary(x)).wkb))
 
             print('finish caclulating geometry {} {}'.format(res, time.asctime(time.localtime(time.time()))))
 
