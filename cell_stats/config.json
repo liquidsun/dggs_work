@@ -1,6 +1,8 @@
 {   
     "dggss":[
         {"name":["h3"], "global_res":[0,1,2], "sample_res":[3], "proj":"proj=goode"},
+        {"name":["s2"], "global_res":[0,1,2], "sample_res":[3], "proj":"proj=goode"},
+        {"name":["rhpix"], "global_res":[0,1,2], "sample_res":[3], "proj":"proj=rhealpix"},
         {"name":["DGGRID","ISEA3H"], "global_res":[1,2,3], "sample_res":[5], "proj":"proj=goode"},
         {"name":["DGGRID","ISEA4H"], "global_res":[1,2,3], "sample_res":[5], "proj":"proj=goode"},
         {"name":["DGGRID","ISEA4D"], "global_res":[1,2,3], "sample_res":[5], "proj":"proj=goode"}

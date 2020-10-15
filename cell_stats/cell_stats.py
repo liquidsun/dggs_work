@@ -12,6 +12,7 @@ from h3_helper import *
 from s2_helper import *
 import numpy as np
 import functools
+from pandas.core.common import flatten
 from dggrid4py import DGGRIDv7, Dggs, dgselect, dggs_types
 from rhealpixdggs.dggs import *
 
@@ -23,7 +24,7 @@ def get_rhpix_cells(res, extent=None):
     if extent:
         nw = (extent[1], extent[2])
         se = (extent[3], extent[0])
-        set_hex = list(flatten(rdggs.cells_from_region(resolution, nw, se, plane=False)))
+        set_hex = list(flatten(rdggs.cells_from_region(res, nw, se, plane=False)))
     else:    
         set_hex = [x for x in rdggs.grid(res)]
 
@@ -67,11 +68,11 @@ def get_conf(conf_path):
 
 @timer
 def get_cells_area_stats(df, res):
-
-    area_min = int(df['area'].min())
-    area_max = int(df['area'].max())
-    area_std = int(df['area'].std())
-    area_mean =int(df['area'].mean())
+    print(df.head())
+    area_min = df['area'].min()
+    area_max = df['area'].max()
+    area_std = df['area'].std()
+    area_mean = df['area'].mean()
     num_cells = len(df)
     
     stats_pd = pd.DataFrame({'resolution':[res],'min_area':[area_min],'max_area':[area_max],\
@@ -102,7 +103,7 @@ def create_cells(dggs, resolution, dggrid, extent=None):
         if extent:
             df = get_s2_cells(resolution,extent['bbox'])
         else:
-            df = get_h3_cells(resolution,extent)
+            df = get_s2_cells(resolution,extent)
       
         gdf = create_s2_geometry(df)
 
@@ -215,10 +216,12 @@ def main():
     if not os.path.exists(dggrid_work_dir):
         os.makedirs(dggrid_work_dir)
 
-    dggrid_instance = DGGRIDv7(executable=dggrid_exec, working_dir=dggrid_work_dir, capture_logs=False, silent=False)
-
     for dggs in config['dggss']:
         print(f"Start processing {dggs['name']}")
+        if dggs['name'][0] == 'DGGRID':
+            dggrid_instance = DGGRIDv7(executable=dggrid_exec, working_dir=dggrid_work_dir, capture_logs=False, silent=False)
+        else:
+            dggrid_instance = None
         stats_df_global = []
         for res in dggs['global_res']:
             print(f"Start processing global resolution {res}")
