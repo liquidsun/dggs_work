@@ -27,7 +27,7 @@ def __haversine(lon1, lat1, lon2, lat2):
 
 def create_h3_geometry(df):
     gdf = gpd.GeoDataFrame(df)
-    gdf['geometry'] = df['cell_id'].apply(lambda x: Polygon(h3.h3_to_geo_boundary(x)))
+    gdf['geometry'] = df['cell_id'].apply(lambda x: Polygon(h3.h3_to_geo_boundary(x,geo_json=True)))
     gdf.crs = 'EPSG:4326'
     return gdf
 
@@ -56,7 +56,7 @@ def create_h3_geom_cells(extent, resolutions, table, export_type, db_engine):
         if export_type == 'postgres':
             geom_time = time.time()
             gdf = gpd.GeoDataFrame({"cell_id": set_hex})
-            gdf['geometry'] = gdf["cell_id"].apply(lambda x: (Polygon(h3.h3_to_geo_boundary(x))))
+            gdf['geometry'] = gdf["cell_id"].apply(lambda x: (Polygon(h3.h3_to_geo_boundary(x,geo_json=True))))
 
             print(f'finish caclulating geometry fo res {res} in {str(round(time.time() - geom_time, 2))} seconds')
 
@@ -96,8 +96,8 @@ def create_h3_geom_cells_global(resolutions, table, export_type, db_engine=''):
             for i in set_hex_0:
                 set_hex.extend(list(h3.h3_to_children(i, res)))
         if export_type == 'postgres':
-            df = pd.GeoDataFrame({"cell_id": set_hex})
-            gdf['geometry'] = gdf["cell_id"].apply(lambda x:(Polygon(h3.h3_to_geo_boundary(x)).wkb))
+            gdf = pd.GeoDataFrame({"cell_id": set_hex})
+            gdf['geometry'] = gdf["cell_id"].apply(lambda x:(Polygon(h3.h3_to_geo_boundary(x, geo_json=True)).wkb))
 
             print('finish caclulating geometry {} {}'.format(res, time.asctime(time.localtime(time.time()))))
 
@@ -107,11 +107,28 @@ def create_h3_geom_cells_global(resolutions, table, export_type, db_engine=''):
         elif export_type == 'geojson':
             transformer = Transformer.from_crs("epsg:4326", 'proj=isea')
             gdf = gpd.GeoDataFrame({"cell_id": set_hex})
-            gdf['geometry'] = gdf.cell_id.apply(lambda x: Polygon(h3.h3_to_geo_boundary(x, True)))
+            gdf['geometry'] = gdf.cell_id.apply(lambda x: Polygon(h3.h3_to_geo_boundary(x, geo_json=True)))
             print('finish caclulating geometry {} {}'.format(res, time.asctime(time.localtime(time.time()))))
             gdf['area'] = gdf.geometry.apply(lambda x: transform(transformer.transform, x).area)
             gdf.to_file("{}{}.geojson".format(table, res), driver='GeoJSON')
             print('finish import to geojson {} {}'.format(res, time.asctime(time.localtime(time.time()))))
+
+
+def get_h3_cells(res, extent=None):
+    
+    if extent:
+        set_hex = list(h3.polyfill_geojson(extent, res=res))
+    else:    
+        set_hex_0 = list(h3.get_res0_indexes())
+        set_hex = []
+        if res == 0:
+            set_hex = set_hex_0
+        else:
+            for i in set_hex_0:
+                set_hex.extend(list(h3.h3_to_children(i, res)))
+    df = pd.DataFrame({"cell_id": set_hex})
+    
+    return df
 
 
 def raster_to_h3(raster_path, value_name, cell_min_res, cell_max_res, extent=None, pix_size_factor=3):
@@ -123,7 +140,7 @@ def raster_to_h3(raster_path, value_name, cell_min_res, cell_max_res, extent=Non
     table (string): name of a value to be uploaded into dggs cells
     cell_min_res (integer): min h3 resolution to look for based on raster cell size
     cell_max_res (integer): max h3 resolution to look for based on raster cell size
-    extent (list): Extent as array of 2 lat lon pairs to get raster values for
+    extent (list): Extent as array of 2 lon lat pairs to get raster values for
     pix_size_factor (pinteger): how times smaller h3 hex size should be comparing with raster cell size
 
     Returns:
@@ -169,14 +186,13 @@ def raster_to_h3(raster_path, value_name, cell_min_res, cell_max_res, extent=Non
             resolution = key
             break
     print(resolution)
-
     # Create dataframe with cell_ids from extent with given resolution
     print(f"Start filling raster extent with h3 indexes at resolution {resolution}")
-    df = pd.DataFrame({'cell_id': list(h3.polyfill(extent['features'][0]["geometry"], res=resolution))})
+    df = pd.DataFrame({'cell_id': list(h3.polyfill_geojson(extent['features'][0]["geometry"], res=resolution))})
 
     # Get raster values for each cell_id
     print(f"Start getting raster values for hexes at resolution {resolution}")
-    df[value_name] = df['cell_id'].apply(lambda x: raster_band_array[rs.index(h3.h3_to_geo(x)[0], h3.h3_to_geo(x)[1])])
+    df[value_name] = df['cell_id'].apply(lambda x: raster_band_array[rs.index(h3.h3_to_geo(x)[1], h3.h3_to_geo(x)[0])])
 
     # Drop nodata
     df = df[df[value_name] != rs.nodata]
@@ -211,7 +227,7 @@ def vector_to_h3(vector_path, value_name, resolution, extent=None, layer=None):
 
     # Create dataframe with cell_ids from extent with given resolution
     print(f"Start filling raster extent with h3 indexes at resolution {resolution}")
-    h3_gdf = gpd.GeoDataFrame({'cell_id': list(h3.polyfill(extent['features'][0]["geometry"], res=resolution))})
+    h3_gdf = gpd.GeoDataFrame({'cell_id': list(h3.polyfill_geojson(extent['features'][0]["geometry"], res=resolution))})
 
     # Get hex centroids for points
     h3_gdf['geometry'] = h3_gdf['cell_id'].apply(lambda x: Point(h3.h3_to_geo(x)[0], h3.h3_to_geo(x)[1]))

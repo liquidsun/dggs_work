@@ -42,6 +42,29 @@ def create_s2_geometry(df):
     return gdf
 
 
+def get_s2_cells(res, extent=None):
+
+    coverer = s2.S2RegionCoverer()
+    if extent:
+        coverer.set_fixed_level(resolution)
+        region_rect = s2.S2LatLngRect(
+        s2.S2LatLng_FromDegrees(extent[1], extent[0]),
+        s2.S2LatLng_FromDegrees(extent[3], extent[2]))
+        set_hex = [x.id() for x in coverer.GetCovering(region_rect)]
+
+    else:
+        coverer.set_fixed_level(resolution)
+        extent_o = box(-180, -80, 180, 80)     
+        region_rect = s2.S2LatLngRect(
+        s2.S2LatLng_FromDegrees(-180, -80),
+        s2.S2LatLng_FromDegrees(180, 80))
+        set_hex = [x.id() for x in coverer.GetCovering(region_rect)]
+
+    df = pd.DataFrame({"cell_id": set_hex})
+    
+    return df
+
+
 def create_s2_geom_cells(extent, resolutions):
     # Create s2 rectangle to fill with s2 cells
     region_rect = s2.S2LatLngRect(
