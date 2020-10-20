@@ -116,6 +116,14 @@ def create_h3_geom_cells_global(resolutions, table, export_type, db_engine=''):
 
 def get_h3_cells(res, extent=None):
     
+    """Get h3 cells for given resolution
+
+    Parameters:
+    res (int): h3 resolution 
+    extent (list): Extent as array of 2 lon lat pairs to get raster values for
+    Returns:
+    Pandas dataframe
+   """
     if extent:
         set_hex = list(h3.polyfill_geojson(extent, res=res))
     else:    
@@ -207,7 +215,7 @@ def vector_to_h3(vector_path, value_name, resolution, extent=None, layer=None):
     vector_path (string): path to vector file compatible with Geopandas for uploading
     value_name (string): vector attribute name to load into dggs cells
     resolution (integer): h3 cell resolution to use
-    extent (list): extent as array of 2 lat lon pairs to get raster values for
+    extent (list): extent as array of 2 lon lat pairs to get raster values for
     layer (string): vector layer name if geopackage is used
 
     Returns:
@@ -230,7 +238,7 @@ def vector_to_h3(vector_path, value_name, resolution, extent=None, layer=None):
     h3_gdf = gpd.GeoDataFrame({'cell_id': list(h3.polyfill_geojson(extent['features'][0]["geometry"], res=resolution))})
 
     # Get hex centroids for points
-    h3_gdf['geometry'] = h3_gdf['cell_id'].apply(lambda x: Point(h3.h3_to_geo(x)[0], h3.h3_to_geo(x)[1]))
+    h3_gdf['geometry'] = h3_gdf['cell_id'].apply(lambda x: Point(h3.h3_to_geo(x)[1], h3.h3_to_geo(x)[0]))
     hex_gdf = h3_gdf.set_crs('epsg:4326')
 
     # Spatial join hex centroids with gdf

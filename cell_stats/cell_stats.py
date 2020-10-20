@@ -10,42 +10,10 @@ from multiprocessing import Pool
 sys.path.append('..')
 from h3_helper import *
 from s2_helper import *
+from rhealpix_helper import *
 import numpy as np
 import functools
-from pandas.core.common import flatten
 from dggrid4py import DGGRIDv7, Dggs, dgselect, dggs_types
-from rhealpixdggs.dggs import *
-
-# rhealpix functions
-# TODO move to separate module
-
-def get_rhpix_cells(res, extent=None):
-    rdggs = WGS84_003
-    if extent:
-        nw = (extent[1], extent[2])
-        se = (extent[3], extent[0])
-        set_hex = list(flatten(rdggs.cells_from_region(res, nw, se, plane=False)))
-    else:    
-        set_hex = [x for x in rdggs.grid(res)]
-
-    df = pd.DataFrame({"cell_id": set_hex})
-    
-    return df
-
-def lonlat_to_latlon(lonlat_array):
-    latlon_array = []
-    for vertex in lonlat_array:
-        latlon_array.append((vertex[1],vertex[0]))
-    return latlon_array
-
-def create_rhpix_geometry(df):
-    gdf = gpd.GeoDataFrame(df.copy())
-    gdf['geometry'] = gdf['cell_id'].apply(lambda x: Polygon(lonlat_to_latlon(x.boundary(n=2,plane=False))))
-    gdf.crs = 'EPSG:4326'
-    gdf['cell_id'] = gdf['cell_id'].apply(lambda x: str(x))
-    return gdf
-
-# rhealpix bloc finished 
 
 
 def timer(func):

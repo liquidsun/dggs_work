@@ -43,21 +43,28 @@ def create_s2_geometry(df):
 
 
 def get_s2_cells(res, extent=None):
+    """Get s2 cells for given resolution
+
+    Parameters:
+    res (int): S2 resolution 
+    extent (list): Extent as array of 2 lon lat pairs to get raster values for
+    Returns:
+    Pandas dataframe
+   """
 
     coverer = s2.S2RegionCoverer()
     if extent:
-        coverer.set_fixed_level(resolution)
+        coverer.set_fixed_level(res)
         region_rect = s2.S2LatLngRect(
         s2.S2LatLng_FromDegrees(extent[1], extent[0]),
         s2.S2LatLng_FromDegrees(extent[3], extent[2]))
         set_hex = [x.id() for x in coverer.GetCovering(region_rect)]
 
     else:
-        coverer.set_fixed_level(resolution)
-        extent_o = box(-180, -80, 180, 80)     
+        coverer.set_fixed_level(res)
         region_rect = s2.S2LatLngRect(
-        s2.S2LatLng_FromDegrees(-180, -80),
-        s2.S2LatLng_FromDegrees(180, 80))
+        s2.S2LatLng_FromDegrees(-90, -180),
+        s2.S2LatLng_FromDegrees(90, 180))
         set_hex = [x.id() for x in coverer.GetCovering(region_rect)]
 
     df = pd.DataFrame({"cell_id": set_hex})
@@ -66,6 +73,8 @@ def get_s2_cells(res, extent=None):
 
 
 def create_s2_geom_cells(extent, resolutions):
+
+
     # Create s2 rectangle to fill with s2 cells
     region_rect = s2.S2LatLngRect(
         s2.S2LatLng.FromDegrees(extent.bounds[1], extent.bounds[0]),
@@ -105,7 +114,7 @@ def raster_to_s2(raster_path, value_name, cell_min_res, cell_max_res, extent=Non
     value_name (string): name of a value to be uploaded
     cell_min_res (integer): min h3 resolution to look for based on raster cell size
     cell_max_res (integer): max h3 resolution to look for based on raster cell size
-    extent (list): Extent as array of 2 lat lon pairs to get raster values for
+    extent (list): Extent as array of 2 lon lat pairs to get raster values for
     pix_size_factor (pinteger): how times smaller h3 hex size should be comparing with raster cell size
 
     Returns:
