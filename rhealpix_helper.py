@@ -36,12 +36,21 @@ def __lonlat_to_latlon(lonlat_array):
         latlon_array.append((vertex[1],vertex[0]))
     return latlon_array
 
+def __cell_to_geometry(cell):
+    geom = None
+    try:
+        geom =  Polygon(cell.boundary(n=2,plane=False))
+    except:
+        print(f'internal rhealpix error with cell.boundary method for {str(cell)}')
+    return geom
 
 def create_rhpix_geometry(df):
+
     gdf = gpd.GeoDataFrame(df.copy())
-    gdf['geometry'] = gdf['cell_id'].apply(lambda x: Polygon(x.boundary(n=2,plane=False)))
+    gdf['geometry'] = gdf['cell_id'].apply(__cell_to_geometry)
     gdf.crs = 'EPSG:4326'
     gdf['cell_id'] = gdf['cell_id'].apply(lambda x: str(x))
+
     return gdf
 
 
