@@ -69,6 +69,26 @@ def get_eaggr_indexes_at_level(df_level_0, resolution, dggs):
                                     .stack().to_frame('cell').reset_index(1, drop=True).reset_index(drop=True))
         return get_eaggr_indexes_at_level(next_res, resolution - 1, dggs)
 
+def get_eaggr_cells(res, extent=None):
+    
+    """Get eaggr cells for given resolution
+
+    Parameters:
+    res (int): h3 resolution 
+    extent (list): Extent as array of 2 lon lat pairs to get raster values for
+    Returns:
+    Pandas dataframe
+   """
+    dggs = Eaggr(Model.ISEA4T)
+    cell_ids_0 = list(map(lambda x: '0' + x, list(map(str, [x for x in range(10)]))))
+    cell_ids_0.extend(list(map(str, [x for x in range(10, 20, 1)])))
+    gdf_level_0 = gpd.GeoDataFrame()
+    gdf_level_0['cell'] = pd.Series(list(map(lambda x: DggsCell(x), cell_ids_0)))
+    
+    df = get_eaggr_indexes_at_level(gdf_level_0, res, dggs).copy()
+    df['cell_id'] = df['cell'].apply(lambda x: x.get_cell_id())
+    return df 
+
 
 def create_eaggrt_cells_global(resolutions, table):
     dggs = Eaggr(Model.ISEA4T)

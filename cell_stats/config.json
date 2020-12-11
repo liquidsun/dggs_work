@@ -1,10 +1,8 @@
 {   
     "dggss":[
-        {"name":["h3"], "global_res":[0,1,2], "sample_res":[3], "proj":"proj=goode"},
-        {"name":["s2"], "global_res":[0,1,2], "sample_res":[3], "proj":"proj=goode"},
-        {"name":["rhpix"], "global_res":[0,1,2], "sample_res":[3], "proj":"proj=rhealpix"},
-        {"name":["DGGRID","ISEA3H"], "global_res":[1,2,3], "sample_res":[5], "proj":"proj=goode"},
-        {"name":["DGGRID","ISEA4H"], "global_res":[1,2,3], "sample_res":[5], "proj":"proj=goode"},
-        {"name":["DGGRID","ISEA4D"], "global_res":[1,2,3], "sample_res":[5], "proj":"proj=goode"}
+        {"name":["h3"], "global_res":[1,2,3,4,5,6], "sample_res":[7,8], "proj":"LAEA"},
+        {"name":["h3"], "global_res":[1,2,3,4,5,6], "sample_res":[7,8], "proj":"LAEA"},
+        {"name":["DGGRID","ISEA3H"], "global_res":[1,2,3,4,5,6,7,8,9], "sample_res":[10,11,12,13], "proj":"LAEA"}
+        
     ]
 }

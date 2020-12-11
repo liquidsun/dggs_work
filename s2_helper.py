@@ -26,7 +26,7 @@ def __haversine(lon1, lat1, lon2, lat2):
 
 
 def s2_geometry_from_cellid(cell_id):
-    new_cell = s2.S2Cell(s2.S2CellId(cell_id))
+    new_cell = s2.S2Cell(s2.S2CellId.FromToken(cell_id,len(cell_id)))
     vertices = []
     for i in range(0, 4):
         vertex = new_cell.GetS2LatLngVertex(i)
@@ -58,14 +58,14 @@ def get_s2_cells(res, extent=None):
         region_rect = s2.S2LatLngRect(
         s2.S2LatLng_FromDegrees(extent[1], extent[0]),
         s2.S2LatLng_FromDegrees(extent[3], extent[2]))
-        set_hex = [x.id() for x in coverer.GetCovering(region_rect)]
+        set_hex = [x.ToToken() for x in coverer.GetCovering(region_rect)]
 
     else:
         coverer.set_fixed_level(res)
         region_rect = s2.S2LatLngRect(
         s2.S2LatLng_FromDegrees(-90, -180),
         s2.S2LatLng_FromDegrees(90, 180))
-        set_hex = [x.id() for x in coverer.GetCovering(region_rect)]
+        set_hex = [x.ToToken() for x in coverer.GetCovering(region_rect)]
 
     df = pd.DataFrame({"cell_id": set_hex})
     
@@ -176,12 +176,12 @@ def raster_to_s2(raster_path, value_name, cell_min_res, cell_max_res, extent=Non
 
     # Create dataframe with cell_ids from cover with given resolution
     print(f"Start filling raster extent with s2 indexes at resolution {resolution}")
-    df = pd.DataFrame({'cell_id': [x.id() for x in coverer.GetCovering(region_rect)]})
+    df = pd.DataFrame({'cell_id': [x.ToToken() for x in coverer.GetCovering(region_rect)]})
 
     # Get raster values for each hex_id
     print(f"Start getting raster values for s2 cells at resolution {resolution}")
     df[value_name] = df['cell_id'].apply(lambda x: raster_band_array[
-        rs.index(s2.S2CellId(x).ToLatLng().lng().degrees(), s2.S2CellId(x).ToLatLng().lat().degrees())])
+        rs.index(s2.S2CellId.FromToken(x,len(x)).ToLatLng().lng().degrees(), s2.S2CellId.FromToken(x,len(x)).ToLatLng().lat().degrees())])
 
     # Drop nodata
     df = df[df[value_name] != rs.nodata]
@@ -219,11 +219,11 @@ def vector_to_s2(vector_path, value_name, resolution, extent=None, layer=None):
 
     # Create dataframe with cell_ids from cover with given resolution
     print(f"Start filling raster extent with s2 indexes at resolution {resolution}")
-    s2_gdf = gpd.GeoDataFrame({'cell_id': [x.id() for x in coverer.GetCovering(region_rect)]})
+    s2_gdf = gpd.GeoDataFrame({'cell_id': [x.ToToken() for x in coverer.GetCovering(region_rect)]})
 
     # Get hex centroids for points
     s2_gdf['geometry'] = s2_gdf['cell_id'].apply(
-        lambda x: Point(s2.S2CellId(x).ToLatLng().lng().degrees(), s2.S2CellId(x).ToLatLng().lat().degrees()))
+        lambda x: Point(s2.S2CellId.FromToken(x,len(x)).ToLatLng().lng().degrees(), s2.S2CellId.FromToken(x,len(x)).ToLatLng().lat().degrees()))
     s2_gdf = s2_gdf.set_crs('epsg:4326')
 
     # Spatial join hex centroids with gdf
@@ -249,7 +249,7 @@ def cell_s2_downsampling(df, cell_id_col, metric_col, coarse_resolution, metric_
    """
     df_coarse = df.copy()
     coarse_id_col = 'cell_id_{}'.format(coarse_resolution)
-    df_coarse[coarse_id_col] = df_coarse[cell_id_col].apply(lambda x: s2.S2CellId(x).parent(coarse_resolution).id())
+    df_coarse[coarse_id_col] = df_coarse[cell_id_col].apply(lambda x: s2.S2CellId.FromToken(x,len(x)).parent(coarse_resolution).ToToken())
 
     if metric_type == 'numeric':
         dfc = df_coarse.groupby(coarse_id_col)[[metric_col]].mean().reset_index()

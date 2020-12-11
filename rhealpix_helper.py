@@ -39,7 +39,7 @@ def __lonlat_to_latlon(lonlat_array):
 def __cell_to_geometry(cell):
     geom = None
     try:
-        geom =  Polygon(cell.boundary(n=2,plane=False))
+        geom =  Polygon(__lonlat_to_latlon(cell.boundary(n=2,plane=False)))
     except:
         print(f'internal rhealpix error with cell.boundary method for {str(cell)}')
     return geom
@@ -57,9 +57,9 @@ def create_rhpix_geometry(df):
 def get_rhpix_cells(res, extent=None):
     rdggs = WGS84_003
     if extent:
-        nw = (extent[1], extent[2])
-        se = (extent[3], extent[0])
-        set_hex = list(flatten(rdggs.cells_from_region(res, nw, se, plane=False)))
+        se = (extent[1], extent[2])
+        nw = (extent[3], extent[0])
+        set_hex = list(flatten(rdggs.cells_from_region(res, se, nw, plane=False)))
     else:    
         set_hex = [x for x in rdggs.grid(res)]
 
@@ -121,7 +121,7 @@ def raster_to_rhpix(raster_path, value_name, cell_min_res, cell_max_res, extent=
    """
     # Open raster
     rs = rasterio.open(raster_path)
-
+    rdggs = WGS84_003
     # Get extent to fill with rhealpix cells
 
     if extent:
