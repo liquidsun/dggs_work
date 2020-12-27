@@ -82,32 +82,33 @@ def check_for_geom(geom):
 def get_cells_area_stats(df, res):
     
     # Filter out invalid geometry
-    df['crossed'] = df['geometry'].apply(check_for_geom)
-
-    date_line_cross_error_cells = len(df[df['crossed']])
-    df = df[~df['crossed']]
-    other_geom_anomalies = len(df[(df['area']<df['area'].quantile(0.005))&(df['area']>df['area'].quantile(0.995))])
-    df = df[(df['area']>df['area'].quantile(0.005))&(df['area']<df['area'].quantile(0.995))]
-
-
-    df['std_area'] = df['area']/df['area'].mean() 
-    df['zsc'] = df.apply(zsc_calculation,axis=1)
-    area_min = df['area'].min()
-    area_max = df['area'].max()
-    area_std = df['area'].std()
-    area_mean = df['area'].mean()
-    std_area_std = df['std_area'].std()
-    std_area_range = df['std_area'].max() - df['std_area'].min()
-    zsc_std = df['zsc'].std()
-    zsc_std_range = df['zsc'].max() - df['zsc'].min()
-    num_cells = len(df)
+    try:
+        df['crossed'] = df['geometry'].apply(check_for_geom)
+        date_line_cross_error_cells = len(df[df['crossed']])
+        df = df[~df['crossed']]
+        other_geom_anomalies = len(df[(df['area']<df['area'].quantile(0.005))&(df['area']>df['area'].quantile(0.995))])
+        df = df[(df['area']>df['area'].quantile(0.005))&(df['area']<df['area'].quantile(0.995))]
+        df['std_area'] = df['area']/df['area'].mean() 
+        df['zsc'] = df.apply(zsc_calculation,axis=1)
+        area_min = df['area'].min()
+        area_max = df['area'].max()
+        area_std = df['area'].std()
+        area_mean = df['area'].mean()
+        std_area_std = df['std_area'].std()
+        std_area_range = df['std_area'].max() - df['std_area'].min()
+        zsc_std = df['zsc'].std()
+        zsc_std_range = df['zsc'].max() - df['zsc'].min()
+        num_cells = len(df)
+        
+        stats_pd = pd.DataFrame({'resolution':[res],'min_area':[area_min],'max_area':[area_max],\
+                                'std':[area_std],'mean':[area_mean],'num_cells':[num_cells], 'std_area_std':[std_area_std],\
+                                'std_area_range':[std_area_range], 'zsc_std':[zsc_std], 'zsc_std_range':[zsc_std_range],\
+                                'date_line_cross_error_cells':[date_line_cross_error_cells],'other_geom_anomalies':other_geom_anomalies})
     
-    stats_pd = pd.DataFrame({'resolution':[res],'min_area':[area_min],'max_area':[area_max],\
-                             'std':[area_std],'mean':[area_mean],'num_cells':[num_cells], 'std_area_std':[std_area_std],\
-                             'std_area_range':[std_area_range], 'zsc_std':[zsc_std], 'zsc_std_range':[zsc_std_range],\
-                            'date_line_cross_error_cells':[date_line_cross_error_cells],'other_geom_anomalies':other_geom_anomalies})
-    
-    return stats_pd
+        return stats_pd
+    except: 
+        print(len(df))
+        return None
 
 
 def get_lambert_area(geom):
