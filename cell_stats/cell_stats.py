@@ -12,8 +12,8 @@ import math
 from multiprocessing import Pool
 sys.path.append('..')
 from h3_helper import *
-#from s2_helper import *
-#from rhealpix_helper import *
+from s2_helper import *
+from rhealpix_helper import *
 import numpy as np
 import functools
 from dggrid4py import DGGRIDv7, Dggs, dgselect, dggs_types
@@ -40,13 +40,18 @@ def get_conf(conf_path):
 
 def get_area_perimeter_from_lambert(geom):
     '''Area from cell's lambert azimutal projection'''
-    if (-180 <= geom.centroid.x <= 180) and (-90 <= geom.centroid.y <= 90):
-        proj_str = f"+proj=laea +lat_0={geom.centroid.y} +lon_0={geom.centroid.x}"
-        project = pyproj.Transformer.from_crs('EPSG:4236', proj_str, always_xy=True).transform
-        perimeter = transform(project, geom).length
-        area = transform(project, geom).area
-    else:
-        print(f'invalid centroid {geom.centroid}')
+    try:
+        if (-180 <= geom.centroid.x <= 180) and (-90 <= geom.centroid.y <= 90):
+            proj_str = f"+proj=laea +lat_0={geom.centroid.y} +lon_0={geom.centroid.x}"
+            project = pyproj.Transformer.from_crs('EPSG:4236', proj_str, always_xy=True).transform
+            perimeter = transform(project, geom).length
+            area = transform(project, geom).area
+        else:
+            print(f'invalid centroid {geom.centroid}')
+            perimeter = None
+            area = None
+    except:
+        print(f'invalid centroid None')
         perimeter = None
         area = None
     return area, perimeter
