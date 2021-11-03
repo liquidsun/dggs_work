@@ -1,0 +1,6 @@
+{   
+    "dggss":[
+        {"name":["DGGRID","ISEA3H"], "global_res":[1,2,3], "sample_res":[], "proj":"LAEA"},
+        {"name":["DGGRID","ISEA3H"], "global_res":[1,2,3], "sample_res":[], "proj":"UTM"}
+    ]
+}
